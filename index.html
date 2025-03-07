@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Diabetes Prediction Web App</title>
+  <!-- TensorFlow.js Library -->
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f0f7ff;
+      padding: 20px;
+      display: flex;
+      gap: 30px;
+    }
+
+    .container {
+      flex: 1;
+      max-width: 800px;
+      background: #fff;
+      border-radius: 12px;
+      padding: 30px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    }
+
+    .info-sidebar {
+      width: 300px;
+      background: #fff;
+      border-radius: 12px;
+      padding: 25px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 25px;
+      color: #2c3e50;
+      font-size: 1.8em;
+    }
+
+    .form-section {
+      margin-bottom: 25px;
+      padding: 20px;
+      background: #f8f9fa;
+      border-radius: 8px;
+    }
+
+    .form-section h3 {
+      margin-bottom: 15px;
+      color: #34495e;
+      font-size: 1.1em;
+    }
+
+    form {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 15px;
+    }
+
+    .form-group {
+      position: relative;
+    }
+
+    .full-width {
+      grid-column: 1 / -1;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+      color: #4a5568;
+      font-size: 0.9em;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #e2e8f0;
+      border-radius: 6px;
+      font-size: 0.95em;
+      transition: border-color 0.3s ease;
+    }
+
+    input:focus, select:focus {
+      border-color: green;
+      outline: none;
+    }
+
+    button {
+      padding: 14px;
+      background: green;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 1em;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    button:hover:not(:disabled) {
+      background: #3182ce;
+      transform: translateY(-1px);
+    }
+
+    .result {
+      margin-top: 25px;
+      padding: 20px;
+      border-radius: 8px;
+      text-align: center;
+      font-size: 1.1em;
+      display: none;
+    }
+
+    .diabetic {
+      background: #fed7d7;
+      border: 2px solid #f56565;
+      color: #c53030;
+    }
+
+    .non-diabetic {
+      background: #c6f6d5;
+      border: 2px solid #48bb78;
+      color: #2f855a;
+    }
+
+    .confidence-bar {
+      height: 8px;
+      background: #e2e8f0;
+      border-radius: 4px;
+      margin: 15px 0;
+      overflow: hidden;
+    }
+
+    .confidence-fill {
+      height: 100%;
+      transition: width 0.5s ease;
+    }
+
+    .info-sidebar h2 {
+      font-size: 1.3em;
+      color: #2c3e50;
+      margin-bottom: 15px;
+    }
+
+    .info-content {
+      font-size: 0.9em;
+      color: #4a5568;
+      line-height: 1.6;
+    }
+
+    .info-content ul {
+      padding-left: 20px;
+      margin: 10px 0;
+    }
+
+    .tooltip {
+      position: absolute;
+      right: 10px;
+      top: 35px;
+      color: #718096;
+      cursor: help;
+      font-size: 0.9em;
+    }
+
+    @media (max-width: 768px) {
+      body {
+        flex-direction: column;
+      }
+      
+      .info-sidebar {
+        width: 100%;
+      }
+      
+      form {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Diabetes Risk Assessment</h1>
+    <div class="form-section">
+      <form id="predictionForm">
+        <!-- Form fields -->
+        <div class="form-group">
+          <label for="age">Age</label>
+          <input type="number" step="any" id="age" required>
+        </div>
+        <div class="form-group">
+          <label for="gender">Gender</label>
+          <select id="gender" required>
+            <option value="" disabled selected>Select Gender</option>
+            <option value="1">Female</option>
+            <option value="2">Male</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="bmi">BMI</label>
+          <input type="number" step="any" id="bmi" required>
+        </div>
+        <div class="form-group">
+          <label for="sbp">SBP (Systolic BP)</label>
+          <input type="number" step="any" id="sbp" required>
+        </div>
+        <div class="form-group">
+          <label for="dbp">DBP (Diastolic BP)</label>
+          <input type="number" step="any" id="dbp" required>
+        </div>
+        <div class="form-group">
+          <label for="fpg">FPG (Fasting Plasma Glucose)</label>
+          <input type="number" step="any" id="fpg" required>
+        </div>
+        <div class="form-group">
+          <label for="chol">Cholesterol</label>
+          <input type="number" step="any" id="chol" required>
+        </div>
+        <div class="form-group">
+          <label for="tri">Triglyceride</label>
+          <input type="number" step="any" id="tri" required>
+        </div>
+        <div class="form-group">
+          <label for="hdl">HDL</label>
+          <input type="number" step="any" id="hdl" required>
+        </div>
+        <div class="form-group">
+          <label for="ldl">LDL</label>
+          <input type="number" step="any" id="ldl" required>
+        </div>
+        <div class="form-group">
+          <label for="alt">ALT</label>
+          <input type="number" step="any" id="alt" required>
+        </div>
+        <div class="form-group">
+          <label for="bun">BUN</label>
+          <input type="number" step="any" id="bun" required>
+        </div>
+        <div class="form-group">
+          <label for="ccr">CCR (Creatinine Clearance)</label>
+          <input type="number" step="any" id="ccr" required>
+        </div>
+        <div class="form-group">
+          <label for="ffpg">FFPG (Final Fasting Plasma Glucose)</label>
+          <input type="number" step="any" id="ffpg" required>
+        </div>
+        <div class="form-group">
+          <label for="smoking">Smoking Status</label>
+          <select id="smoking" required>
+            <option value="" disabled selected>Select Smoking Status</option>
+            <option value="1">Current Smoker</option>
+            <option value="2">Ever Smoker</option>
+            <option value="3">Never Smoker</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="drinking">Drinking Status</label>
+          <select id="drinking" required>
+            <option value="" disabled selected>Select Drinking Status</option>
+            <option value="1">Current Drinker</option>
+            <option value="2">Ever Drinker</option>
+            <option value="3">Never Drinker</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="family_history">Family History of Diabetes</label>
+          <select id="family_history" required>
+            <option value="" disabled selected>Select Option</option>
+            <option value="1">Yes</option>
+            <option value="0">No</option>
+          </select>
+        </div>
+        <div class="form-group full-width">
+          <button type="submit" id="predictButton" disabled>Assess Diabetes Risk</button>
+        </div>
+      </form>
+    </div>
+    <div id="result" class="result">
+      <div id="resultText"></div>
+      <div class="confidence-bar">
+        <div class="confidence-fill" id="confidenceBar"></div>
+      </div>
+      <div id="confidenceText"></div>
+    </div>
+  </div>
+
+  <div class="info-sidebar">
+    <h2>About This Assessment</h2>
+    <div class="info-content">
+      <p>This prediction model uses clinical data from 1,304 patients collected according to WHO standards. Early detection of diabetes can significantly improve health outcomes.</p>
+      
+      <h3>Key Features Analyzed:</h3>
+      <ul>
+        <li>Biometric Data (Age(21 and above), BMI, Blood Pressure)</li>
+        <li>Blood Chemistry (Glucose, Cholesterol)</li>
+        <li>Liver/Kidney Function Markers</li>
+        <li>Lifestyle Factors (Smoking, Alcohol)</li>
+        <li>Family History</li>
+      </ul>
+
+      <h3>Interpretation Guidelines:</h3>
+      <p>Scores above 50% indicate higher diabetes risk. Consult a healthcare professional for any positive result or if you have concerns about your metabolic health.</p>
+
+      <h3>Data Sources</h3>
+      <p>Based on 2016 Chinese clinical study data validated against WHO diabetes diagnostic criteria.</p>
+    </div>
+  </div>
+
+  <script>
+    // Mean and scale values for normalization
+    const meanValues = [48.0850569, 1.35161515, 24.1239228, 123.219382, 76.3604462, 5.22636765, 4.86075309, 1.57782911, 1.36169193, 2.80366509, 26.8006027, 4.84064942, 72.0840787, 5.72908436, 2.62338776, 2.86925911, 0.0615849407];
+    const scaleValues = [14.68444811, 0.47747454, 3.39689946, 17.51182266, 11.00277729, 0.78099865, 0.92526973, 1.2459078, 0.3119531, 0.66397876, 22.2547717, 1.25141716, 15.85503172, 1.42440207, 0.76309691, 0.45237629, 0.24040016];
+
+    let model;
+    const resultDiv = document.getElementById("result");
+    const predictButton = document.getElementById("predictButton");
+
+    // Load the TensorFlow.js model
+    async function loadModel() {
+      try {
+        model = await tf.loadGraphModel("model/model.json");
+        predictButton.disabled = false;
+      } catch (error) {
+        console.error("Error loading model:", error);
+      }
+    }
+
+    // Normalize input values
+    function normalizeInput(value, index) {
+      return (value - meanValues[index]) / scaleValues[index];
+    }
+
+    // Handle form submission
+    async function predictOutcome(event) {
+      event.preventDefault();
+      const inputs = [
+        parseFloat(document.getElementById("age").value),
+        parseFloat(document.getElementById("gender").value),
+        parseFloat(document.getElementById("bmi").value),
+        parseFloat(document.getElementById("sbp").value),
+        parseFloat(document.getElementById("dbp").value),
+        parseFloat(document.getElementById("fpg").value),
+        parseFloat(document.getElementById("chol").value),
+        parseFloat(document.getElementById("tri").value),
+        parseFloat(document.getElementById("hdl").value),
+        parseFloat(document.getElementById("ldl").value),
+        parseFloat(document.getElementById("alt").value),
+        parseFloat(document.getElementById("bun").value),
+        parseFloat(document.getElementById("ccr").value),
+        parseFloat(document.getElementById("ffpg").value),
+        parseFloat(document.getElementById("smoking").value),
+        parseFloat(document.getElementById("drinking").value),
+        parseFloat(document.getElementById("family_history").value)
+      ];
+
+      const normalizedInputs = inputs.map((val, idx) => normalizeInput(val, idx));
+      const inputTensor = tf.tensor2d([normalizedInputs]);
+
+      try {
+        const predictionTensor = model.predict(inputTensor);
+        const probability = await predictionTensor.data();
+        const diabeticProb = probability[0];
+        const nonDiabeticProb = 1 - diabeticProb;
+
+        resultDiv.style.display = "block";
+        resultDiv.className = `result ${diabeticProb >= 0.5 ? 'diabetic' : 'non-diabetic'}`;
+
+        const confidence = diabeticProb >= 0.5 ? 
+          `${(diabeticProb * 100).toFixed(1)}% risk of diabetes` :
+          `${(nonDiabeticProb * 100).toFixed(1)}% likelihood of being non-diabetic`;
+
+        document.getElementById('resultText').textContent = diabeticProb >= 0.5 ? 
+          "Potential Diabetes Risk Detected" : "No Significant Diabetes Risk Detected";
+
+        document.getElementById('confidenceText').textContent = `Confidence: ${confidence}`;
+
+        const confidenceBar = document.getElementById('confidenceBar');
+        // Set the width based on the predicted confidence value
+        confidenceBar.style.width = `${(diabeticProb >= 0.5 ? diabeticProb : nonDiabeticProb) * 100}%`;
+        confidenceBar.style.backgroundColor = diabeticProb >= 0.5 ? '#f56565' : '#48bb78';
+      } catch (error) {
+        console.error("Prediction error:", error);
+        resultDiv.style.display = "block";
+        resultDiv.textContent = "Error in making prediction.";
+      }
+    }
+
+    // Add tooltips to input fields
+    document.querySelectorAll('.form-group').forEach(group => {
+      const input = group.querySelector('input, select');
+      if (input) {
+        const tooltip = document.createElement('div');
+        tooltip.className = 'tooltip';
+        tooltip.textContent = '?';
+        tooltip.title = getTooltipText(input.id);
+        group.appendChild(tooltip);
+      }
+    });
+
+    function getTooltipText(id) {
+      const tips = {
+        age: 'Patient age in years',
+        bmi: 'Body Mass Index (weight in kg / height in m²)',
+        sbp: 'Systolic Blood Pressure (mmHg)',
+        fpg: 'Fasting Plasma Glucose (mmol/L)',
+        ffpg: 'Final Fasting Plasma Glucose (mmol/L)',
+        ccr: 'Creatinine Clearance Rate (mL/min)'
+      };
+      return tips[id] || 'Clinical measurement from blood tests';
+    }
+
+    // Event listeners
+    document.getElementById("predictionForm").addEventListener("submit", predictOutcome);
+    window.addEventListener("load", loadModel);
+  </script>
+</body>
+</html>
