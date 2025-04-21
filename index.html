@@ -444,12 +444,12 @@
       </div>
 
       <div class="form-section">
-        <form id="predictionForm">
+        <form id="predictionForm" novalidate>
           <!-- Basic Information Tab -->
           <div class="tab-content active" id="basic-tab">
             <div class="form-group">
               <label for="age">Age (years)</label>
-              <input type="number" min="21" max="120" step="1" id="age" required>
+              <input type="number" min="21" max="120" step="1" id="age" required value="35">
               <div class="tooltip" title="Patient age in years (21 and above)">?</div>
             </div>
             <div class="form-group">
@@ -462,17 +462,17 @@
             </div>
             <div class="form-group">
               <label for="bmi">BMI (kg/m²)</label>
-              <input type="number" step="0.1" min="15" max="60" id="bmi" required>
+              <input type="number" step="0.1" min="15" max="60" id="bmi" required value="24.5">
               <div class="tooltip" title="Body Mass Index (weight in kg divided by height in meters squared)">?</div>
             </div>
             <div class="form-group">
               <label for="sbp">Systolic BP (mmHg)</label>
-              <input type="number" step="1" min="70" max="250" id="sbp" required>
+              <input type="number" step="1" min="70" max="250" id="sbp" required value="120">
               <div class="tooltip" title="Systolic Blood Pressure (top number)">?</div>
             </div>
             <div class="form-group">
               <label for="dbp">Diastolic BP (mmHg)</label>
-              <input type="number" step="1" min="40" max="150" id="dbp" required>
+              <input type="number" step="1" min="40" max="150" id="dbp" required value="80">
               <div class="tooltip" title="Diastolic Blood Pressure (bottom number)">?</div>
             </div>
             <div class="form-group full-width">
@@ -484,45 +484,45 @@
           <div class="tab-content" id="clinical-tab">
             <div class="form-group">
               <label for="fpg">Fasting Plasma Glucose (mmol/L)</label>
-              <input type="number" step="0.1" min="2" max="20" id="fpg" required>
+              <input type="number" step="0.1" min="2" max="20" id="fpg" required value="5.0">
               <div class="tooltip" title="Blood sugar level after fasting for at least 8 hours">?</div>
             </div>
             <div class="form-group">
               <label for="chol">Total Cholesterol (mmol/L)</label>
-              <input type="number" step="0.1" min="2" max="15" id="chol" required>
+              <input type="number" step="0.1" min="2" max="15" id="chol" required value="4.5">
             </div>
             <div class="form-group">
               <label for="tri">Triglycerides (mmol/L)</label>
-              <input type="number" step="0.1" min="0.2" max="20" id="tri" required>
+              <input type="number" step="0.1" min="0.2" max="20" id="tri" required value="1.5">
             </div>
             <div class="form-group">
               <label for="hdl">HDL (High-Density Lipoprotein) (mmol/L)</label>
-              <input type="number" step="0.1" min="0.2" max="5" id="hdl" required>
+              <input type="number" step="0.1" min="0.2" max="5" id="hdl" required value="1.3">
               <div class="tooltip" title="High-Density Lipoprotein ('good' cholesterol)">?</div>
             </div>
             <div class="form-group">
               <label for="ldl">LDL (Low-Density Lipoprotein) (mmol/L)</label>
-              <input type="number" step="0.1" min="0.5" max="10" id="ldl" required>
+              <input type="number" step="0.1" min="0.5" max="10" id="ldl" required value="2.8">
               <div class="tooltip" title="Low-Density Lipoprotein ('bad' cholesterol)">?</div>
             </div>
             <div class="form-group">
               <label for="alt">ALT (Alanine Aminotransferase) (U/L)</label>
-              <input type="number" step="1" min="5" max="500" id="alt" required>
+              <input type="number" step="1" min="5" max="500" id="alt" required value="25">
               <div class="tooltip" title="Alanine Aminotransferase (liver enzyme)">?</div>
             </div>
             <div class="form-group">
               <label for="bun">BUN (Blood urea nitrogen) (mmol/L)</label>
-              <input type="number" step="0.1" min="1" max="30" id="bun" required>
+              <input type="number" step="0.1" min="1" max="30" id="bun" required value="4.8">
               <div class="tooltip" title="Blood Urea Nitrogen (kidney function marker)">?</div>
             </div>
             <div class="form-group">
               <label for="ccr">Creatinine Clearance (mL/min)</label>
-              <input type="number" step="1" min="20" max="200" id="ccr" required>
+              <input type="number" step="1" min="20" max="200" id="ccr" required value="90">
               <div class="tooltip" title="Measures how well kidneys filter creatinine from blood">?</div>
             </div>
             <div class="form-group">
               <label for="ffpg">Final Fasting Plasma Glucose (mmol/L)</label>
-              <input type="number" step="0.1" min="2" max="20" id="ffpg" required>
+              <input type="number" step="0.1" min="2" max="20" id="ffpg" required value="5.2">
             </div>
             <div class="form-group full-width">
               <button type="button" class="prev-tab" data-prev="basic"><i class="fas fa-arrow-left"></i> Back to Basic Info</button>
@@ -595,41 +595,7 @@
         </div>
       </div>
     </div>
-
-    <!--<div class="info-sidebar">
-      <h2><i class="fas fa-info-circle"></i> About This Assessment</h2>
-      <div class="info-content">
-        <p>This advanced diabetes risk assessment tool evaluates your likelihood of having or developing diabetes based on clinical biomarkers and lifestyle factors.</p>
-        
-        <h3><i class="fas fa-flask"></i> Clinical Basis</h3>
-        <p>The prediction model was developed using data from 1,304 patients collected according to WHO standards, with the following accuracy metrics:</p>
-        <ul>
-          <li><strong>Sensitivity:</strong> 92% (correctly identifies diabetes cases)</li>
-          <li><strong>Specificity:</strong> 94% (correctly identifies non-diabetic cases)</li>
-          <li><strong>Overall Accuracy:</strong> 93%</li>
-        </ul>
-
-        <h3><i class="fas fa-chart-line"></i> Risk Interpretation</h3>
-        <ul>
-          <li><strong>Low Risk (0-30%):</strong> Unlikely to have diabetes</li>
-          <li><strong>Moderate Risk (31-49%):</strong> Potential pre-diabetes</li>
-          <li><strong>High Risk (50-69%):</strong> Likely pre-diabetes</li>
-          <li><strong>Very High Risk (70-100%):</strong> Probable diabetes</li>
-        </ul>
-        <p>Note: This tool does not replace professional medical diagnosis. Always consult a healthcare provider for definitive testing.</p>
-
-        <h3><i class="fas fa-procedures"></i> Next Steps</h3>
-        <p>If your result indicates elevated risk:</p>
-        <ol>
-          <li>Consult your primary care physician</li>
-          <li>Request HbA1c and oral glucose tolerance tests</li>
-          <li>Implement lifestyle modifications</li>
-          <li>Schedule regular follow-up screenings</li>
-        </ol>
-      </div>
-    </div>
   </div>
-    -->
 
   <script>
     // Mean and scale values for normalization
@@ -637,6 +603,7 @@
     const scaleValues = [14.68444811, 0.47747454, 3.39689946, 17.51182266, 11.00277729, 0.78099865, 0.92526973, 1.2459078, 0.3119531, 0.66397876, 22.2547717, 1.25141716, 15.85503172, 1.42440207, 0.76309691, 0.45237629, 0.24040016];
 
     let model;
+    let modelLoaded = false;
     const resultDiv = document.getElementById("result");
     const predictButton = document.getElementById("predictButton");
     const progressContainer = document.getElementById("progressContainer");
@@ -649,7 +616,10 @@
         progressContainer.style.display = 'block';
         progressFill.style.width = '30%';
         
+        // Load model - replace with your actual model path
         model = await tf.loadGraphModel("model/model.json");
+        // For local testing:
+        // model = await tf.loadGraphModel("model/model.json");
         
         // Complete progress bar
         progressFill.style.width = '100%';
@@ -657,6 +627,7 @@
           progressContainer.style.display = 'none';
         }, 500);
         
+        modelLoaded = true;
         predictButton.disabled = false;
         predictButton.innerHTML = '<i class="fas fa-heartbeat"></i> Assess Diabetes Risk';
       } catch (error) {
@@ -671,39 +642,75 @@
       return (value - meanValues[index]) / scaleValues[index];
     }
 
+    // Validate form fields
+    function validateForm() {
+      let allValid = true;
+      const activeTab = document.querySelector('.tab-content.active');
+      
+      activeTab.querySelectorAll('input[required], select[required]').forEach(field => {
+        field.setCustomValidity(''); // Clear previous custom validity
+        
+        if (!field.value) {
+          field.setCustomValidity('This field is required');
+          allValid = false;
+        } else if (field.type === 'number') {
+          const value = parseFloat(field.value);
+          if (isNaN(value) || value < parseFloat(field.min) || value > parseFloat(field.max)) {
+            field.setCustomValidity(`Must be between ${field.min} and ${field.max}`);
+            allValid = false;
+          }
+        }
+        
+        if (!allValid && field.reportValidity) {
+          field.reportValidity();
+        }
+      });
+      
+      predictButton.disabled = !allValid;
+      return allValid;
+    }
+
     // Handle form submission
     async function predictOutcome(event) {
       event.preventDefault();
+      
+      if (!validateForm()) {
+        return; // Don't proceed if validation fails
+      }
+      
+      if (!modelLoaded) {
+        alert("Model is still loading. Please wait...");
+        return;
+      }
       
       // Show loading state
       const originalButtonText = predictButton.innerHTML;
       predictButton.disabled = true;
       predictButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Analyzing...';
       
-      const inputs = [
-        parseFloat(document.getElementById("age").value),
-        parseFloat(document.getElementById("gender").value),
-        parseFloat(document.getElementById("bmi").value),
-        parseFloat(document.getElementById("sbp").value),
-        parseFloat(document.getElementById("dbp").value),
-        parseFloat(document.getElementById("fpg").value),
-        parseFloat(document.getElementById("chol").value),
-        parseFloat(document.getElementById("tri").value),
-        parseFloat(document.getElementById("hdl").value),
-        parseFloat(document.getElementById("ldl").value),
-        parseFloat(document.getElementById("alt").value),
-        parseFloat(document.getElementById("bun").value),
-        parseFloat(document.getElementById("ccr").value),
-        parseFloat(document.getElementById("ffpg").value),
-        parseFloat(document.getElementById("smoking").value),
-        parseFloat(document.getElementById("drinking").value),
-        parseFloat(document.getElementById("family_history").value)
-      ];
-
-      const normalizedInputs = inputs.map((val, idx) => normalizeInput(val, idx));
-      const inputTensor = tf.tensor2d([normalizedInputs]);
-
       try {
+        const inputs = [
+          parseFloat(document.getElementById("age").value),
+          parseFloat(document.getElementById("gender").value),
+          parseFloat(document.getElementById("bmi").value),
+          parseFloat(document.getElementById("sbp").value),
+          parseFloat(document.getElementById("dbp").value),
+          parseFloat(document.getElementById("fpg").value),
+          parseFloat(document.getElementById("chol").value),
+          parseFloat(document.getElementById("tri").value),
+          parseFloat(document.getElementById("hdl").value),
+          parseFloat(document.getElementById("ldl").value),
+          parseFloat(document.getElementById("alt").value),
+          parseFloat(document.getElementById("bun").value),
+          parseFloat(document.getElementById("ccr").value),
+          parseFloat(document.getElementById("ffpg").value),
+          parseFloat(document.getElementById("smoking").value),
+          parseFloat(document.getElementById("drinking").value),
+          parseFloat(document.getElementById("family_history").value)
+        ];
+
+        const normalizedInputs = inputs.map((val, idx) => normalizeInput(val, idx));
+        const inputTensor = tf.tensor2d([normalizedInputs]);
         const predictionTensor = model.predict(inputTensor);
         const probability = await predictionTensor.data();
         const diabeticProb = probability[0];
@@ -725,7 +732,7 @@
         resultDiv.style.display = "block";
         resultDiv.className = "result-container diabetic";
         document.getElementById('resultText').textContent = "Error in Assessment";
-        document.getElementById('confidenceText').textContent = "Please try again or check your inputs";
+        document.getElementById('confidenceText').textContent = error.message || "Please try again";
         document.getElementById('resultIcon').innerHTML = '<i class="fas fa-exclamation-triangle"></i> Error in Assessment';
       }
     }
@@ -840,12 +847,19 @@
           content.classList.remove('active');
         });
         document.getElementById(`${tabId}-tab`).classList.add('active');
+        
+        // Validate the new tab's fields
+        validateForm();
       });
     });
     
     // Next button functionality
     document.querySelectorAll('.next-tab').forEach(button => {
       button.addEventListener('click', () => {
+        const currentTab = document.querySelector('.tab-content.active');
+        if (!validateForm()) {
+          return; // Don't proceed if validation fails
+        }
         const nextTab = button.dataset.next;
         document.querySelector(`.form-tab[data-tab="${nextTab}"]`).click();
       });
@@ -886,17 +900,9 @@
       return tips[id] || 'Clinical measurement from blood tests';
     }
 
-    // Form validation
-    document.getElementById('predictionForm').addEventListener('input', () => {
-      let allValid = true;
-      document.querySelectorAll('#predictionForm input[required], #predictionForm select[required]').forEach(field => {
-        if (!field.value) allValid = false;
-      });
-      predictButton.disabled = !allValid;
-    });
-
     // Event listeners
     document.getElementById("predictionForm").addEventListener("submit", predictOutcome);
+    document.getElementById("predictionForm").addEventListener("input", validateForm);
     window.addEventListener("load", loadModel);
   </script>
 </body>
