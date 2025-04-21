@@ -598,312 +598,311 @@
   </div>
 
   <script>
-    // Mean and scale values for normalization
-    const meanValues = [48.0850569, 1.35161515, 24.1239228, 123.219382, 76.3604462, 5.22636765, 4.86075309, 1.57782911, 1.36169193, 2.80366509, 26.8006027, 4.84064942, 72.0840787, 5.72908436, 2.62338776, 2.86925911, 0.0615849407];
-    const scaleValues = [14.68444811, 0.47747454, 3.39689946, 17.51182266, 11.00277729, 0.78099865, 0.92526973, 1.2459078, 0.3119531, 0.66397876, 22.2547717, 1.25141716, 15.85503172, 1.42440207, 0.76309691, 0.45237629, 0.24040016];
+   // Mean and scale values for normalization
+const meanValues = [48.0850569, 1.35161515, 24.1239228, 123.219382, 76.3604462, 5.22636765, 4.86075309, 1.57782911, 1.36169193, 2.80366509, 26.8006027, 4.84064942, 72.0840787, 5.72908436, 2.62338776, 2.86925911, 0.0615849407];
+const scaleValues = [14.68444811, 0.47747454, 3.39689946, 17.51182266, 11.00277729, 0.78099865, 0.92526973, 1.2459078, 0.3119531, 0.66397876, 22.2547717, 1.25141716, 15.85503172, 1.42440207, 0.76309691, 0.45237629, 0.24040016];
 
-    let model;
-    let modelLoaded = false;
-    const resultDiv = document.getElementById("result");
-    const predictButton = document.getElementById("predictButton");
-    const progressContainer = document.getElementById("progressContainer");
-    const progressFill = document.getElementById("progressFill");
+let model;
+let modelLoaded = false;
+const resultDiv = document.getElementById("result");
+const predictButton = document.getElementById("predictButton");
+const progressContainer = document.getElementById("progressContainer");
+const progressFill = document.getElementById("progressFill");
 
-    // Load the TensorFlow.js model
-    async function loadModel() {
-      try {
-        // Show loading progress
-        progressContainer.style.display = 'block';
-        progressFill.style.width = '30%';
-        
-        // Load model - replace with your actual model path
-        model = await tf.loadGraphModel("model/model.json");
-        // For local testing:
-        // model = await tf.loadGraphModel("model/model.json");
-        
-        // Complete progress bar
-        progressFill.style.width = '100%';
-        setTimeout(() => {
-          progressContainer.style.display = 'none';
-        }, 500);
-        
-        modelLoaded = true;
-        predictButton.disabled = false;
-        predictButton.innerHTML = '<i class="fas fa-heartbeat"></i> Assess Diabetes Risk';
-      } catch (error) {
-        console.error("Error loading model:", error);
-        progressFill.style.backgroundColor = 'var(--danger)';
-        predictButton.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Model Failed to Load';
+// Load the TensorFlow.js model
+async function loadModel() {
+  try {
+    // Show loading progress
+    progressContainer.style.display = 'block';
+    progressFill.style.width = '30%';
+    
+    // Load model - replace with your actual model path
+    model = await tf.loadGraphModel("model/model.json");
+    
+    // Complete progress bar
+    progressFill.style.width = '100%';
+    setTimeout(() => {
+      progressContainer.style.display = 'none';
+    }, 500);
+    
+    modelLoaded = true;
+    predictButton.disabled = false;
+    predictButton.innerHTML = '<i class="fas fa-heartbeat"></i> Assess Diabetes Risk';
+  } catch (error) {
+    console.error("Error loading model:", error);
+    progressFill.style.backgroundColor = 'var(--danger)';
+    predictButton.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Model Failed to Load';
+  }
+}
+
+// Normalize input values
+function normalizeInput(value, index) {
+  return (value - meanValues[index]) / scaleValues[index];
+}
+
+// Validate form fields
+function validateForm() {
+  let allValid = true;
+  const activeTab = document.querySelector('.tab-content.active');
+  
+  activeTab.querySelectorAll('input[required], select[required]').forEach(field => {
+    field.setCustomValidity(''); // Clear previous custom validity
+    
+    if (!field.value) {
+      field.setCustomValidity('This field is required');
+      allValid = false;
+    } else if (field.type === 'number') {
+      const value = parseFloat(field.value);
+      if (isNaN(value) || value < parseFloat(field.min) || value > parseFloat(field.max)) {
+        field.setCustomValidity(`Must be between ${field.min} and ${field.max}`);
+        allValid = false;
       }
-    }
-
-    // Normalize input values
-    function normalizeInput(value, index) {
-      return (value - meanValues[index]) / scaleValues[index];
-    }
-
-    // Validate form fields
-    function validateForm() {
-      let allValid = true;
-      const activeTab = document.querySelector('.tab-content.active');
-      
-      activeTab.querySelectorAll('input[required], select[required]').forEach(field => {
-        field.setCustomValidity(''); // Clear previous custom validity
-        
-        if (!field.value) {
-          field.setCustomValidity('This field is required');
-          allValid = false;
-        } else if (field.type === 'number') {
-          const value = parseFloat(field.value);
-          if (isNaN(value) || value < parseFloat(field.min) || value > parseFloat(field.max)) {
-            field.setCustomValidity(`Must be between ${field.min} and ${field.max}`);
-            allValid = false;
-          }
-        }
-        
-        if (!allValid && field.reportValidity) {
-          field.reportValidity();
-        }
-      });
-      
-      predictButton.disabled = !allValid;
-      return allValid;
-    }
-
-    // Handle form submission
-    async function predictOutcome(event) {
-      event.preventDefault();
-      
-      if (!validateForm()) {
-        return; // Don't proceed if validation fails
-      }
-      
-      if (!modelLoaded) {
-        alert("Model is still loading. Please wait...");
-        return;
-      }
-      
-      // Show loading state
-      const originalButtonText = predictButton.innerHTML;
-      predictButton.disabled = true;
-      predictButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Analyzing...';
-      
-      try {
-        const inputs = [
-          parseFloat(document.getElementById("age").value),
-          parseFloat(document.getElementById("gender").value),
-          parseFloat(document.getElementById("bmi").value),
-          parseFloat(document.getElementById("sbp").value),
-          parseFloat(document.getElementById("dbp").value),
-          parseFloat(document.getElementById("fpg").value),
-          parseFloat(document.getElementById("chol").value),
-          parseFloat(document.getElementById("tri").value),
-          parseFloat(document.getElementById("hdl").value),
-          parseFloat(document.getElementById("ldl").value),
-          parseFloat(document.getElementById("alt").value),
-          parseFloat(document.getElementById("bun").value),
-          parseFloat(document.getElementById("ccr").value),
-          parseFloat(document.getElementById("ffpg").value),
-          parseFloat(document.getElementById("smoking").value),
-          parseFloat(document.getElementById("drinking").value),
-          parseFloat(document.getElementById("family_history").value)
-        ];
-
-        const normalizedInputs = inputs.map((val, idx) => normalizeInput(val, idx));
-        const inputTensor = tf.tensor2d([normalizedInputs]);
-        const predictionTensor = model.predict(inputTensor);
-        const probability = await predictionTensor.data();
-        const diabeticProb = probability[0];
-        
-        // Reset button state
-        predictButton.disabled = false;
-        predictButton.innerHTML = originalButtonText;
-        
-        // Display results
-        displayResults(diabeticProb);
-      } catch (error) {
-        console.error("Prediction error:", error);
-        
-        // Reset button state
-        predictButton.disabled = false;
-        predictButton.innerHTML = originalButtonText;
-        
-        // Show error
-        resultDiv.style.display = "block";
-        resultDiv.className = "result-container diabetic";
-        document.getElementById('resultText').textContent = "Error in Assessment";
-        document.getElementById('confidenceText').textContent = error.message || "Please try again";
-        document.getElementById('resultIcon').innerHTML = '<i class="fas fa-exclamation-triangle"></i> Error in Assessment';
-      }
-    }
-
-    function displayResults(diabeticProb) {
-      resultDiv.style.display = "block";
-      
-      // Determine risk category
-      let riskCategory, resultClass, resultIcon, resultText;
-      if (diabeticProb >= 0.7) {
-        riskCategory = "diabetic";
-        resultClass = "diabetic";
-        resultIcon = "fas fa-exclamation-triangle";
-        resultText = "High Diabetes Risk Detected";
-      } else if (diabeticProb >= 0.5) {
-        riskCategory = "diabetic";
-        resultClass = "diabetic";
-        resultIcon = "fas fa-exclamation-circle";
-        resultText = "Moderate Diabetes Risk Detected";
-      } else if (diabeticProb >= 0.3) {
-        riskCategory = "prediabetic";
-        resultClass = "prediabetic";
-        resultIcon = "fas fa-info-circle";
-        resultText = "Pre-Diabetes Risk Detected";
-      } else {
-        riskCategory = "non-diabetic";
-        resultClass = "non-diabetic";
-        resultIcon = "fas fa-check-circle";
-        resultText = "Low Diabetes Risk";
-      }
-      
-      // Update result display
-      resultDiv.className = `result-container ${resultClass}`;
-      document.getElementById('resultText').textContent = resultText;
-      document.getElementById('resultIcon').innerHTML = `<i class="${resultIcon}"></i> ${resultText}`;
-      
-      // Update risk category highlights
-      document.querySelectorAll('.risk-category').forEach(cat => {
-        cat.classList.remove('active');
-        if (cat.dataset.risk === riskCategory) {
-          cat.classList.add('active');
-        }
-      });
-      
-      // Update confidence meter
-      const confidencePercent = Math.round(diabeticProb * 100);
-      const confidenceBar = document.getElementById('confidenceBar');
-      confidenceBar.style.width = `${confidencePercent}%`;
-      confidenceBar.style.backgroundColor = getConfidenceColor(diabeticProb);
-      
-      document.getElementById('confidenceText').textContent = 
-        `Confidence: ${confidencePercent}% probability of diabetes`;
-      
-      // Update recommendations
-      updateRecommendations(riskCategory, diabeticProb);
     }
     
-    function getConfidenceColor(probability) {
-      if (probability >= 0.7) return 'var(--danger)';
-      if (probability >= 0.5) return 'var(--warning)';
-      return 'var(--primary)';
+    if (!allValid && field.reportValidity) {
+      field.reportValidity();
     }
+  });
+  
+  predictButton.disabled = !allValid;
+  return allValid;
+}
+
+// Handle form submission
+async function predictOutcome(event) {
+  event.preventDefault();
+  
+  if (!validateForm()) {
+    return; // Don't proceed if validation fails
+  }
+  
+  if (!modelLoaded) {
+    alert("Model is still loading. Please wait...");
+    return;
+  }
+  
+  // Show loading state
+  const originalButtonText = predictButton.innerHTML;
+  predictButton.disabled = true;
+  predictButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Analyzing...';
+  
+  try {
+    const inputs = [
+      parseFloat(document.getElementById("age").value),
+      parseFloat(document.getElementById("gender").value),
+      parseFloat(document.getElementById("bmi").value),
+      parseFloat(document.getElementById("sbp").value),
+      parseFloat(document.getElementById("dbp").value),
+      parseFloat(document.getElementById("fpg").value),
+      parseFloat(document.getElementById("chol").value),
+      parseFloat(document.getElementById("tri").value),
+      parseFloat(document.getElementById("hdl").value),
+      parseFloat(document.getElementById("ldl").value),
+      parseFloat(document.getElementById("alt").value),
+      parseFloat(document.getElementById("bun").value),
+      parseFloat(document.getElementById("ccr").value),
+      parseFloat(document.getElementById("ffpg").value),
+      parseFloat(document.getElementById("smoking").value),
+      parseFloat(document.getElementById("drinking").value),
+      parseFloat(document.getElementById("family_history").value)
+    ];
+
+    const normalizedInputs = inputs.map((val, idx) => normalizeInput(val, idx));
+    const inputTensor = tf.tensor2d([normalizedInputs]);
+    const predictionTensor = model.predict(inputTensor);
+    const probability = await predictionTensor.data();
+    const diabeticProb = probability[0]; // This is the raw probability (0-1)
     
-    function updateRecommendations(category, probability) {
-      const recContainer = document.getElementById('recommendations');
-      let html = '<h4><i class="fas fa-lightbulb"></i> Recommendations</h4><ul>';
-      
-      if (category === 'diabetic') {
-        html += `
-          <li><strong>Urgent medical consultation</strong> recommended for confirmatory testing (HbA1c, oral glucose tolerance test)</li>
-          <li>Implement <strong>immediate lifestyle changes</strong>: healthy diet and regular physical activity</li>
-          <li>Monitor blood glucose levels regularly</li>
-          <li>Consider referral to an endocrinologist or diabetes specialist</li>
-          <li>Educate yourself about diabetes management and complications</li>
-        `;
-      } else if (category === 'prediabetic') {
-        html += `
-          <li><strong>Medical evaluation</strong> recommended within the next 3 months</li>
-          <li><strong>Lifestyle intervention</strong> can prevent progression to diabetes:
-            <ul>
-              <li>5-7% weight loss if overweight</li>
-              <li>150+ minutes of moderate exercise weekly</li>
-              <li>Diet rich in whole grains, vegetables, lean proteins</li>
-            </ul>
-          </li>
-          <li>Annual diabetes screening advised</li>
-        `;
-      } else {
-        html += `
-          <li><strong>Maintain healthy lifestyle</strong> to preserve low risk status</li>
-          <li>Consider <strong>routine screening</strong> every 3 years (or annually if other risk factors present)</li>
-          <li>Be aware of diabetes symptoms (increased thirst, frequent urination, fatigue)</li>
-          <li>Maintain healthy weight and balanced diet</li>
-        `;
-      }
-      
-      html += '</ul>';
-      recContainer.innerHTML = html;
+    // Reset button state
+    predictButton.disabled = false;
+    predictButton.innerHTML = originalButtonText;
+    
+    // Display results with updated confidence score calculation
+    displayResults(diabeticProb);
+  } catch (error) {
+    console.error("Prediction error:", error);
+    
+    // Reset button state
+    predictButton.disabled = false;
+    predictButton.innerHTML = originalButtonText;
+    
+    // Show error
+    resultDiv.style.display = "block";
+    resultDiv.className = "result-container diabetic";
+    document.getElementById('resultText').textContent = "Error in Assessment";
+    document.getElementById('confidenceText').textContent = error.message || "Please try again";
+    document.getElementById('resultIcon').innerHTML = '<i class="fas fa-exclamation-triangle"></i> Error in Assessment';
+  }
+}
+
+function displayResults(diabeticProb) {
+  resultDiv.style.display = "block";
+  
+  // Determine risk category and calculate confidence score
+  let riskCategory, resultClass, resultIcon, resultText, confidenceScore;
+  
+  // Apply your specified analogy for confidence calculation
+  if (diabeticProb >= 0.70) {
+    riskCategory = "diabetic";
+    resultClass = "diabetic";
+    resultIcon = "fas fa-exclamation-triangle";
+    resultText = "High Diabetes Risk";
+    confidenceScore = diabeticProb * 100; // 70-100% confidence in diabetic
+  } else if (diabeticProb >= 0.40) {
+    riskCategory = "prediabetic";
+    resultClass = "prediabetic";
+    resultIcon = "fas fa-info-circle";
+    resultText = "Moderate Diabetes Risk";
+    confidenceScore = diabeticProb * 100; // 40-69% confidence in prediabetic
+  } else {
+    riskCategory = "non-diabetic";
+    resultClass = "non-diabetic";
+    resultIcon = "fas fa-check-circle";
+    resultText = "Low Diabetes Risk";
+    confidenceScore = (1 - diabeticProb) * 100; // Confidence in being non-diabetic
+  }
+
+  const roundedConfidence = Math.round(confidenceScore);
+  
+  // Update result display
+  resultDiv.className = `result-container ${resultClass}`;
+  document.getElementById('resultText').textContent = resultText;
+  document.getElementById('resultIcon').innerHTML = `<i class="${resultIcon}"></i> ${resultText}`;
+  
+  // Update risk category highlights
+  document.querySelectorAll('.risk-category').forEach(cat => {
+    cat.classList.remove('active');
+    if (cat.dataset.risk === riskCategory) {
+      cat.classList.add('active');
     }
+  });
+  
+  // Update confidence meter
+  const confidenceBar = document.getElementById('confidenceBar');
+  confidenceBar.style.width = `${roundedConfidence}%`;
+  confidenceBar.style.backgroundColor = getConfidenceColor(roundedConfidence);
+  
+  document.getElementById('confidenceText').textContent = 
+    `Confidence: ${roundedConfidence}% ${riskCategory.replace('-', ' ')}`;
+  
+  // Update recommendations
+  updateRecommendations(riskCategory, roundedConfidence);
+}
 
-    // Tab navigation functionality
-    document.querySelectorAll('.form-tab').forEach(tab => {
-      tab.addEventListener('click', () => {
-        const tabId = tab.dataset.tab;
-        
-        // Update active tab
-        document.querySelectorAll('.form-tab').forEach(t => t.classList.remove('active'));
-        tab.classList.add('active');
-        
-        // Show corresponding content
-        document.querySelectorAll('.tab-content').forEach(content => {
-          content.classList.remove('active');
-        });
-        document.getElementById(`${tabId}-tab`).classList.add('active');
-        
-        // Validate the new tab's fields
-        validateForm();
-      });
-    });
+function getConfidenceColor(percentage) {
+  if (percentage >= 70) return 'var(--danger)';      // Red for diabetic
+  if (percentage >= 40) return 'var(--warning)';     // Orange for prediabetic
+  return 'var(--primary)';                           // Green for non-diabetic
+}
+
+function updateRecommendations(category, percentage) {
+  const recContainer = document.getElementById('recommendations');
+  let html = '<h4><i class="fas fa-lightbulb"></i> Recommendations</h4><ul>';
+  
+  if (category === 'diabetic') {
+    html += `
+      <li><strong>Urgent medical consultation</strong> recommended (${percentage}% diabetic probability)</li>
+      <li>Consider immediate <strong>HbA1c test</strong> for confirmation</li>
+      <li>Implement lifestyle changes: diet modification and regular exercise</li>
+      <li>Monitor blood glucose levels regularly</li>
+      <li>Potential referral to endocrinologist</li>
+    `;
+  } else if (category === 'prediabetic') {
+    html += `
+      <li><strong>Medical evaluation</strong> recommended (${percentage}% prediabetic probability)</li>
+      <li>Lifestyle changes can prevent progression to diabetes:
+        <ul>
+          <li>5-7% weight loss if overweight</li>
+          <li>150+ minutes of exercise weekly</li>
+          <li>Balanced diet with whole grains and vegetables</li>
+        </ul>
+      </li>
+      <li>Annual diabetes screening advised</li>
+    `;
+  } else {
+    html += `
+      <li><strong>Maintain current healthy lifestyle</strong> (${percentage}% non-diabetic confidence)</li>
+      <li>Routine screening every 3 years recommended</li>
+      <li>Be aware of diabetes symptoms</li>
+      <li>Maintain healthy weight and balanced diet</li>
+    `;
+  }
+  
+  html += '</ul>';
+  recContainer.innerHTML = html;
+}
+
+// Tab navigation functionality
+document.querySelectorAll('.form-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    const tabId = tab.dataset.tab;
     
-    // Next button functionality
-    document.querySelectorAll('.next-tab').forEach(button => {
-      button.addEventListener('click', () => {
-        const currentTab = document.querySelector('.tab-content.active');
-        if (!validateForm()) {
-          return; // Don't proceed if validation fails
-        }
-        const nextTab = button.dataset.next;
-        document.querySelector(`.form-tab[data-tab="${nextTab}"]`).click();
-      });
-    });
+    // Update active tab
+    document.querySelectorAll('.form-tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
     
-    // Previous button functionality
-    document.querySelectorAll('.prev-tab').forEach(button => {
-      button.addEventListener('click', () => {
-        const prevTab = button.dataset.prev;
-        document.querySelector(`.form-tab[data-tab="${prevTab}"]`).click();
-      });
+    // Show corresponding content
+    document.querySelectorAll('.tab-content').forEach(content => {
+      content.classList.remove('active');
     });
+    document.getElementById(`${tabId}-tab`).classList.add('active');
+    
+    // Validate the new tab's fields
+    validateForm();
+  });
+});
 
-    // Add tooltips to input fields
-    document.querySelectorAll('.form-group').forEach(group => {
-      const input = group.querySelector('input, select');
-      if (input) {
-        const tooltip = document.createElement('div');
-        tooltip.className = 'tooltip';
-        tooltip.innerHTML = '<i class="fas fa-question-circle"></i>';
-        tooltip.title = getTooltipText(input.id);
-        group.appendChild(tooltip);
-      }
-    });
-
-    function getTooltipText(id) {
-      const tips = {
-        age: 'Patient age in years (21 and above)',
-        bmi: 'Body Mass Index (weight in kg / height in m²)\n\nUnderweight: <18.5\nNormal: 18.5-24.9\nOverweight: 25-29.9\nObese: ≥30',
-        sbp: 'Systolic Blood Pressure (mmHg)\n\nNormal: <120\nElevated: 120-129\nHigh (Stage 1): 130-139\nHigh (Stage 2): ≥140',
-        dbp: 'Diastolic Blood Pressure (mmHg)\n\nNormal: <80\nElevated: <80 (with high systolic)\nHigh (Stage 1): 80-89\nHigh (Stage 2): ≥90',
-        fpg: 'Fasting Plasma Glucose (mmol/L)\n\nNormal: <5.6\nPrediabetes: 5.6-6.9\nDiabetes: ≥7.0',
-        ffpg: 'Final Fasting Plasma Glucose (mmol/L)\n\nFollow-up measurement after initial screening',
-        ccr: 'Creatinine Clearance Rate (mL/min)\n\nMeasures kidney function\nNormal: 90-120 mL/min',
-        hdl: 'HDL Cholesterol ("good" cholesterol) (mmol/L)\n\nOptimal: ≥1.0 (men), ≥1.3 (women)\nLow: <1.0 (men), <1.3 (women)',
-        ldl: 'LDL Cholesterol ("bad" cholesterol) (mmol/L)\n\nOptimal: <2.6\nNear optimal: 2.6-3.3\nBorderline high: 3.4-4.1\nHigh: 4.1-4.9\nVery high: ≥4.9'
-      };
-      return tips[id] || 'Clinical measurement from blood tests';
+// Next button functionality
+document.querySelectorAll('.next-tab').forEach(button => {
+  button.addEventListener('click', () => {
+    const currentTab = document.querySelector('.tab-content.active');
+    if (!validateForm()) {
+      return; // Don't proceed if validation fails
     }
+    const nextTab = button.dataset.next;
+    document.querySelector(`.form-tab[data-tab="${nextTab}"]`).click();
+  });
+});
 
-    // Event listeners
-    document.getElementById("predictionForm").addEventListener("submit", predictOutcome);
-    document.getElementById("predictionForm").addEventListener("input", validateForm);
-    window.addEventListener("load", loadModel);
+// Previous button functionality
+document.querySelectorAll('.prev-tab').forEach(button => {
+  button.addEventListener('click', () => {
+    const prevTab = button.dataset.prev;
+    document.querySelector(`.form-tab[data-tab="${prevTab}"]`).click();
+  });
+});
+
+// Add tooltips to input fields
+document.querySelectorAll('.form-group').forEach(group => {
+  const input = group.querySelector('input, select');
+  if (input) {
+    const tooltip = document.createElement('div');
+    tooltip.className = 'tooltip';
+    tooltip.innerHTML = '<i class="fas fa-question-circle"></i>';
+    tooltip.title = getTooltipText(input.id);
+    group.appendChild(tooltip);
+  }
+});
+
+function getTooltipText(id) {
+  const tips = {
+    age: 'Patient age in years (21 and above)',
+    bmi: 'Body Mass Index (weight in kg / height in m²)\n\nUnderweight: <18.5\nNormal: 18.5-24.9\nOverweight: 25-29.9\nObese: ≥30',
+    sbp: 'Systolic Blood Pressure (mmHg)\n\nNormal: <120\nElevated: 120-129\nHigh (Stage 1): 130-139\nHigh (Stage 2): ≥140',
+    dbp: 'Diastolic Blood Pressure (mmHg)\n\nNormal: <80\nElevated: <80 (with high systolic)\nHigh (Stage 1): 80-89\nHigh (Stage 2): ≥90',
+    fpg: 'Fasting Plasma Glucose (mmol/L)\n\nNormal: <5.6\nPrediabetes: 5.6-6.9\nDiabetes: ≥7.0',
+    ffpg: 'Final Fasting Plasma Glucose (mmol/L)\n\nFollow-up measurement after initial screening',
+    ccr: 'Creatinine Clearance Rate (mL/min)\n\nMeasures kidney function\nNormal: 90-120 mL/min',
+    hdl: 'HDL Cholesterol ("good" cholesterol) (mmol/L)\n\nOptimal: ≥1.0 (men), ≥1.3 (women)\nLow: <1.0 (men), <1.3 (women)',
+    ldl: 'LDL Cholesterol ("bad" cholesterol) (mmol/L)\n\nOptimal: <2.6\nNear optimal: 2.6-3.3\nBorderline high: 3.4-4.1\nHigh: 4.1-4.9\nVery high: ≥4.9'
+  };
+  return tips[id] || 'Clinical measurement from blood tests';
+}
+
+// Event listeners
+document.getElementById("predictionForm").addEventListener("submit", predictOutcome);
+document.getElementById("predictionForm").addEventListener("input", validateForm);
+window.addEventListener("load", loadModel);
   </script>
 </body>
 </html>
